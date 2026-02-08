@@ -125,6 +125,12 @@ function createStaging() {
   // Copy compiled JavaScript from build directory
   copyDir(BUILD_DIR, STAGING_DIR);
 
+  // Copy assets folder if it exists
+  const assetsDir = path.join(ROOT, "assets");
+  if (fs.existsSync(assetsDir)) {
+    copyDir(assetsDir, path.join(STAGING_DIR, "assets"));
+  }
+
   console.log("  Created staging directory with plugin files");
 }
 
