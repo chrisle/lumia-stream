@@ -1,5 +1,9 @@
 ![Logo](assets/logo.png)
 
+**📖 Instructions also available here:** [Setup on GitHub](https://github.com/chrisle/lumia-stream/blob/main/user-commands/settings_tutorial.md)
+
+---
+
 ## Setup
 
 **Step 1:** Download the chat command file:<br/>
