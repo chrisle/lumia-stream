@@ -1,7 +1,6 @@
 # User Commands Plugin for Lumia Stream
 
-Allow privileged Twitch viewers (VIP, Tier 2/3 subscribers, and moderators) to
-create, edit, and delete user chat commands.
+Allow Twitch viewers to create, edit, and delete their own chat commands.
 
 ## Features
 
