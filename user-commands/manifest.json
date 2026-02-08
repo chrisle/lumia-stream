@@ -1,0 +1,131 @@
+{
+  "id": "user_commands",
+  "name": "User Commands",
+  "version": "1.0.0",
+  "author": "User Commands Plugin",
+  "email": "",
+  "website": "",
+  "repository": "",
+  "description": "Allow privileged viewers (VIP, Tier 2/3 subs, mods) to create, edit, and delete custom chat commands.",
+  "license": "MIT",
+  "lumiaVersion": "^9.0.0",
+  "category": "chat",
+  "keywords": "commands, chat, twitch, custom, vip, subscriber",
+  "icon": "",
+  "changelog": "",
+  "config": {
+    "settings": [],
+    "settings_tutorial": "---\n### User Commands Plugin\nThis plugin allows privileged viewers to create their own chat commands.\n\n**Who can create commands:**\n- VIPs\n- Tier 2 Subscribers\n- Tier 3 Subscribers\n- Moderators\n\n**Usage:**\n- `!command add <name> <response>` - Create a command\n- `!command edit <name> <response>` - Edit a command\n- `!command delete <name>` - Delete a command\n- `!command list` - List all commands\n\n**Supported Variables:**\n- `{displayName}` - Display name of user\n- `{username}` - Username of user\n- `{channel}` - Channel name\n- `{game}` - Current game\n- `{title}` - Stream title\n---",
+    "actions_tutorial": "---\n### Manage Command\nUse this action with Chat Match to handle `!command add/edit/delete/list` messages.\n\n### Execute Command\nUse this action with Chat Match to execute custom commands when viewers type them.\n---",
+    "actions": [
+      {
+        "type": "manage_command",
+        "label": "Manage Command",
+        "description": "Handle !command add/edit/delete/list operations",
+        "fields": [
+          {
+            "key": "username",
+            "label": "Username",
+            "type": "text",
+            "defaultValue": ""
+          },
+          {
+            "key": "displayName",
+            "label": "Display Name",
+            "type": "text",
+            "defaultValue": ""
+          },
+          {
+            "key": "message",
+            "label": "Message",
+            "type": "text",
+            "defaultValue": "",
+            "helperText": "Everything after !command (e.g., 'add greet Hello!')"
+          },
+          {
+            "key": "isMod",
+            "label": "Is Moderator",
+            "type": "checkbox",
+            "defaultValue": false
+          },
+          {
+            "key": "isVip",
+            "label": "Is VIP",
+            "type": "checkbox",
+            "defaultValue": false
+          },
+          {
+            "key": "isTier2",
+            "label": "Is Tier 2 Sub",
+            "type": "checkbox",
+            "defaultValue": false
+          },
+          {
+            "key": "isTier3",
+            "label": "Is Tier 3 Sub",
+            "type": "checkbox",
+            "defaultValue": false
+          }
+        ]
+      },
+      {
+        "type": "execute_command",
+        "label": "Execute Command",
+        "description": "Execute a user-created custom command",
+        "fields": [
+          {
+            "key": "commandName",
+            "label": "Command Name",
+            "type": "text",
+            "defaultValue": "",
+            "helperText": "Name of the command (without !)"
+          },
+          {
+            "key": "username",
+            "label": "Username",
+            "type": "text",
+            "defaultValue": ""
+          },
+          {
+            "key": "displayName",
+            "label": "Display Name",
+            "type": "text",
+            "defaultValue": ""
+          },
+          {
+            "key": "channel",
+            "label": "Channel",
+            "type": "text",
+            "defaultValue": ""
+          },
+          {
+            "key": "game",
+            "label": "Game",
+            "type": "text",
+            "defaultValue": ""
+          },
+          {
+            "key": "title",
+            "label": "Title",
+            "type": "text",
+            "defaultValue": ""
+          }
+        ]
+      }
+    ],
+    "variables": [
+      {
+        "name": "triode-user-commands",
+        "description": "JSON string storing all custom commands",
+        "value": "{}"
+      },
+      {
+        "name": "lastResponse",
+        "description": "The last response message sent by the plugin",
+        "value": ""
+      }
+    ],
+    "alerts": []
+  },
+  "main": "main.js"
+}

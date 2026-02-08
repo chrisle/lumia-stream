@@ -1,0 +1,20 @@
+{
+  "name": "lumia-plugin-user_commands",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Allow privileged viewers to create user chat commands",
+  "main": "build/main.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "prepackage": "npm run build && cp -r build/* .",
+    "package": "npx lumia-plugin build . --out ./dist/user_commands.lumiaplugin",
+    "postpackage": "rm -rf main.js main.d.ts types.js types.d.ts constants.js constants.d.ts handlers utils"
+  },
+  "dependencies": {
+    "@lumiastream/plugin": "^0.2.9"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}
