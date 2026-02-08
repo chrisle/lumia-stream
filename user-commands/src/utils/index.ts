@@ -1,2 +1,2 @@
-export { hasPermission, canManageCommand } from "./permissions";
-export { parseManageMessage, validateVariables, replaceVariables } from "./parser";
+export { canManageCommand } from "./permissions";
+export { parseManageMessage, normalizeAndStripVariables, findInvalidVariables } from "./parser";

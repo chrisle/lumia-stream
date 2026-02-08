@@ -1,6 +1,24 @@
 import { ParsedMessage } from "../types";
-import { ALLOWED_VARIABLES } from "../constants";
+import { ALLOWED_VARIABLES, VALID_ACTIONS } from "../constants";
 
+/**
+ * Parses a !command message into its component parts.
+ *
+ * @param message - The arguments after "!command" (e.g., "add greet Hello!")
+ * @returns Parsed message with action, commandName, and response, or null if invalid
+ *
+ * @example
+ * parseManageMessage("add greet Hello {{displayName}}!")
+ * // Returns: { action: "add", commandName: "greet", response: "Hello {{displayName}}!" }
+ *
+ * @example
+ * parseManageMessage("delete greet")
+ * // Returns: { action: "delete", commandName: "greet", response: "" }
+ *
+ * @example
+ * parseManageMessage("list")
+ * // Returns: { action: "list", commandName: "", response: "" }
+ */
 export function parseManageMessage(
   message: string | undefined
 ): ParsedMessage | null {
@@ -9,13 +27,18 @@ export function parseManageMessage(
 
   if (parts.length < 1) return null;
 
-  const action = parts[0].toLowerCase();
+  let action = parts[0].toLowerCase();
 
-  if (!["add", "edit", "delete", "list"].includes(action)) {
+  if (!VALID_ACTIONS.includes(action)) {
     return null;
   }
 
-  if (action === "list") {
+  // Normalize "remove" to "delete"
+  if (action === "remove") {
+    action = "delete";
+  }
+
+  if (action === "list" || action === "help") {
     return { action, commandName: "", response: "" };
   }
 
@@ -29,22 +52,52 @@ export function parseManageMessage(
 
   if (parts.length < 3) return null;
 
-  const response = parts.slice(2).join(" ");
+  const rawResponse = parts.slice(2).join(" ");
+  const response = normalizeAndStripVariables(rawResponse);
   return { action, commandName, response };
 }
 
-export function validateVariables(response: string): string[] {
-  const matches = response.match(/\{[^}]+\}/g) || [];
-  return matches.filter((v) => !ALLOWED_VARIABLES.includes(v));
+/**
+ * Normalizes allowed variables to correct case and strips invalid ones.
+ *
+ * - {{message}} and {{displayName}} are normalized to exact case (case-insensitive match)
+ * - Any other {{xxx}} variables are stripped from the template
+ *
+ * @param template - The response template to normalize
+ * @returns Template with normalized variables and invalid ones removed
+ *
+ * @example
+ * normalizeAndStripVariables("Hello {{DISPLAYNAME}}!")
+ * // Returns: "Hello {{displayName}}!"
+ *
+ * @example
+ * normalizeAndStripVariables("{{username}} says {{MESSAGE}}")
+ * // Returns: " says {{message}}" ({{username}} is stripped)
+ */
+export function normalizeAndStripVariables(template: string): string {
+  // First normalize allowed variables to correct case
+  let result = template.replace(/\{\{message\}\}/gi, "{{message}}");
+  result = result.replace(/\{\{displayName\}\}/gi, "{{displayName}}");
+
+  // Strip any remaining {{xxx}} variables that aren't allowed
+  result = result.replace(/\{\{(?!message\}\}|displayName\}\})[^}]+\}\}/gi, "");
+
+  return result;
 }
 
-export function replaceVariables(
-  template: string,
-  variables: Record<string, string>
-): string {
-  let result = template;
-  for (const [key, value] of Object.entries(variables)) {
-    result = result.replace(new RegExp(`\\{${key}\\}`, "g"), value);
-  }
-  return result;
+/**
+ * Finds any variables in the template that aren't in the allowed list.
+ *
+ * @param template - The response template to check
+ * @returns Array of invalid variable strings (e.g., ["{{username}}", "{{channel}}"])
+ *
+ * @example
+ * findInvalidVariables("Hello {{displayName}} from {{channel}}")
+ * // Returns: ["{{channel}}"]
+ */
+export function findInvalidVariables(template: string): string[] {
+  const matches = template.match(/\{\{[^}]+\}\}/g) || [];
+  const normalized = matches.map((v) => v.toLowerCase());
+  const allowedLower = ALLOWED_VARIABLES.map((v) => v.toLowerCase());
+  return matches.filter((_, i) => !allowedLower.includes(normalized[i]));
 }

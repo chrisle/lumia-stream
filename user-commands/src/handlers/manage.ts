@@ -1,32 +1,40 @@
 import { ManageParams, CommandStore } from "../types";
 import { ALLOWED_VARIABLES, RESERVED_COMMANDS } from "../constants";
-import {
-  hasPermission,
-  canManageCommand,
-  parseManageMessage,
-  validateVariables,
-} from "../utils";
+import { canManageCommand, parseManageMessage } from "../utils";
 
+/**
+ * Context object providing dependencies for command management.
+ */
 export interface ManageContext {
+  /** The current command store */
   commands: CommandStore;
+  /** Function to send a chat response */
   sendResponse: (message: string) => Promise<void>;
+  /** Function to persist command changes */
   saveCommands: () => Promise<void>;
 }
 
+/**
+ * Handles the !command management action.
+ * Parses the arguments and routes to the appropriate handler (add/edit/delete/list/help).
+ *
+ * @param params - The action parameters with username and arguments
+ * @param ctx - The context with commands store and helper functions
+ *
+ * @example
+ * // !command add greet Hello {{displayName}}!
+ * await handleManageCommand(
+ *   { username: "lexie", arguments: "add greet Hello {{displayName}}!" },
+ *   ctx
+ * );
+ */
 export async function handleManageCommand(
   params: ManageParams,
   ctx: ManageContext
 ): Promise<void> {
-  const displayName = params?.displayName || params?.username || "User";
+  const displayName = params?.username || "User";
 
-  if (!hasPermission(params)) {
-    await ctx.sendResponse(
-      `@${displayName} Sorry, only VIPs, Tier 2/3 subs, and mods can manage commands.`
-    );
-    return;
-  }
-
-  const parsed = parseManageMessage(params?.message);
+  const parsed = parseManageMessage(params?.arguments);
 
   if (!parsed) {
     await ctx.sendResponse(
@@ -38,6 +46,9 @@ export async function handleManageCommand(
   const { action, commandName, response } = parsed;
 
   switch (action) {
+    case "help":
+      await handleHelp(displayName, ctx);
+      break;
     case "list":
       await handleList(displayName, ctx);
       break;
@@ -51,6 +62,15 @@ export async function handleManageCommand(
       await handleDelete(params, displayName, commandName, ctx);
       break;
   }
+}
+
+async function handleHelp(
+  displayName: string,
+  ctx: ManageContext
+): Promise<void> {
+  await ctx.sendResponse(
+    `@${displayName} Usage: !command <add|edit|delete|list> [name] [response]. Variables: ${ALLOWED_VARIABLES.join(", ")}`
+  );
 }
 
 async function handleList(
@@ -89,14 +109,6 @@ async function handleAdd(
     return;
   }
 
-  const invalidVars = validateVariables(response);
-  if (invalidVars.length > 0) {
-    await ctx.sendResponse(
-      `@${displayName} Invalid variables: ${invalidVars.join(", ")}. Allowed: ${ALLOWED_VARIABLES.join(", ")}`
-    );
-    return;
-  }
-
   const now = new Date().toISOString();
   ctx.commands[commandName] = {
     response,
@@ -130,14 +142,6 @@ async function handleEdit(
   if (!canManageCommand(params, command)) {
     await ctx.sendResponse(
       `@${displayName} You can only edit commands you created.`
-    );
-    return;
-  }
-
-  const invalidVars = validateVariables(response);
-  if (invalidVars.length > 0) {
-    await ctx.sendResponse(
-      `@${displayName} Invalid variables: ${invalidVars.join(", ")}. Allowed: ${ALLOWED_VARIABLES.join(", ")}`
     );
     return;
   }
