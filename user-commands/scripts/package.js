@@ -23,7 +23,6 @@ const { minify } = require("terser");
 const ROOT = path.resolve(__dirname, "..");
 const BUILD_DIR = path.join(ROOT, "build");
 const DIST_DIR = path.join(ROOT, "dist");
-const DOCS_DIR = path.join(ROOT, "docs");
 const STAGING_DIR = path.join(ROOT, ".staging");
 const MANIFEST_FILE = path.join(ROOT, "manifest.json");
 const PACKAGE_FILE = path.join(ROOT, "package.json");
@@ -194,11 +193,11 @@ async function minifyBuild() {
 
 /**
  * Reads a markdown file and wraps it with --- delimiters.
- * @param {string} filename - Name of the file in docs directory
+ * @param {string} filename - Name of the file in root directory
  * @returns {string} Content wrapped with ---\n prefix and \n--- suffix
  */
 function readDocFile(filename) {
-  const filePath = path.join(DOCS_DIR, filename);
+  const filePath = path.join(ROOT, filename);
   if (!fs.existsSync(filePath)) {
     console.warn(`  Warning: ${filename} not found`);
     return "";
@@ -208,7 +207,7 @@ function readDocFile(filename) {
 }
 
 /**
- * Updates manifest.json with content from package.json and docs/*.md files.
+ * Updates manifest.json with content from package.json and *.md files.
  */
 function updateManifest() {
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_FILE, "utf-8"));
@@ -228,12 +227,12 @@ function updateManifest() {
   manifest.config.actions_tutorial = readDocFile("actions_tutorial.md");
 
   // Update changelog and description if they exist
-  const changelogPath = path.join(DOCS_DIR, "changelog.md");
+  const changelogPath = path.join(ROOT, "changelog.md");
   if (fs.existsSync(changelogPath)) {
     manifest.changelog = fs.readFileSync(changelogPath, "utf-8").trimEnd();
   }
 
-  const descriptionPath = path.join(DOCS_DIR, "description.md");
+  const descriptionPath = path.join(ROOT, "description.md");
   if (fs.existsSync(descriptionPath)) {
     manifest.description = fs.readFileSync(descriptionPath, "utf-8").trimEnd();
   }
