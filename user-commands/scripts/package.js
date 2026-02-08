@@ -7,12 +7,13 @@
  *
  * Steps:
  *   1. Clean previous build artifacts
- *   2. Compile TypeScript
- *   3. Minify JavaScript files
- *   4. Update manifest with docs content
- *   5. Create staging directory with only required files
- *   6. Run lumia-plugin build on staging directory
- *   7. Clean up staging directory
+ *   2. Run tests
+ *   3. Compile TypeScript
+ *   4. Minify JavaScript files
+ *   5. Update manifest with docs content
+ *   6. Create staging directory with only required files
+ *   7. Run lumia-plugin build on staging directory
+ *   8. Clean up staging directory
  */
 
 const { execSync } = require("child_process");
@@ -255,29 +256,32 @@ async function main() {
   console.log("\nCleaning old plugin files...");
   cleanOldPlugins();
 
-  // Step 2: Compile TypeScript
+  // Step 2: Run tests
+  run("npm test", "Running tests");
+
+  // Step 3: Compile TypeScript
   run("npx tsc", "Compiling TypeScript");
 
-  // Step 3: Minify JavaScript
+  // Step 4: Minify JavaScript
   console.log("\nMinifying JavaScript...");
   await minifyBuild();
 
-  // Step 4: Update manifest with docs content
+  // Step 5: Update manifest with docs content
   console.log("\nUpdating manifest...");
   updateManifest();
 
-  // Step 5: Create staging directory with only required files
+  // Step 6: Create staging directory with only required files
   console.log("\nCreating staging directory...");
   createStaging();
 
-  // Step 6: Run lumia-plugin build on staging directory
+  // Step 7: Run lumia-plugin build on staging directory
   const outputFile = getOutputFile();
   run(
     `npx lumia-plugin build "${STAGING_DIR}" --out "${outputFile}"`,
     "Building plugin package"
   );
 
-  // Step 7: Clean up staging directory
+  // Step 8: Clean up staging directory
   console.log("\nCleaning up staging directory...");
   cleanStaging();
 

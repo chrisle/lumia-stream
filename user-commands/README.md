@@ -23,13 +23,13 @@ Let your community create and share custom chat commands! Give viewers the power
 
 Use these in your command responses:
 
-- `{{displayname}}` - Display name of the user who triggered the command
-- `{{message}}` - Arguments passed to the command
+- `{displayname}` - Display name of the user who triggered the command
+- `{message}` - Arguments passed to the command
 
 ### Example
 
 ```
-TRIODEOfficial: !command add hug @{{displayname}} hugs @{{message}}!
+TRIODEOfficial: !command add hug @{displayname} hugs @{message}!
 LumiaStreamBot: Command "!hug" has been created.
 Lexie: !hug @TRIODEOfficial
 LumiaStreamBot: @Lexie hugs @TRIODEOfficial!

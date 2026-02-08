@@ -1,5 +1,5 @@
 import { ManageParams, CommandStore } from "../types";
-import { ALLOWED_VARIABLES, RESERVED_COMMANDS } from "../constants";
+import { ALLOWED_VARIABLES, RESERVED_COMMANDS, DEBUG } from "../constants";
 import { canManageCommand, parseManageMessage } from "../utils";
 
 /**
@@ -36,12 +36,16 @@ export async function handleManageCommand(
   params: ManageParams,
   ctx: ManageContext
 ): Promise<void> {
+  if (DEBUG) ctx.log(`[manage] params: ${JSON.stringify(params)}`);
+
   const userId = params?.userId || "";
   const displayName = params?.displayName || "User";
   const isMod = params?.isMod === "true";
   const isBroadcaster = params?.isBroadcaster === "true";
 
+  if (DEBUG) ctx.log(`[manage] parsing arguments: "${params?.arguments}"`);
   const parsed = parseManageMessage(params?.arguments);
+  if (DEBUG) ctx.log(`[manage] parsed: ${JSON.stringify(parsed)}`);
 
   if (!parsed) {
     await ctx.sendResponse(

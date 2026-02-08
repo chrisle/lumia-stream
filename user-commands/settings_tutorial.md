@@ -67,7 +67,7 @@ By default only VIPs, Tier 2, Tier 3, and Mods can create commands. To change th
 - `!command list` - List all commands
 
 **Supported Variables in Responses:**
-- `{{displayname}}` - Display name of the user who triggered the command
-- `{{message}}` - Arguments passed to the command
+- `{displayname}` - Display name of the user who triggered the command
+- `{message}` - Arguments passed to the command
 
 Note: Only these two variables are allowed in custom command responses.

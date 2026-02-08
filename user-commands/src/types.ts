@@ -2,7 +2,7 @@
  * Stored data for a custom command.
  */
 export interface CommandData {
-  /** The response template with {{message}} and {{displayName}} variables */
+  /** The response template with {message} and {displayname} variables */
   response: string;
   /** Unique user ID of the command creator */
   creatorId: string;
@@ -36,6 +36,8 @@ export interface ManageParams {
 export interface ExecuteParams {
   /** The command name without the ! prefix (e.g., "greet") */
   command?: string;
+  /** The display name of the user who triggered the command */
+  displayName?: string;
   /** The arguments passed with the command (e.g., "@someone") */
   arguments?: string;
 }

@@ -2,6 +2,7 @@ import { Plugin } from "@lumiastream/plugin";
 import { ActionsConfig, ManageParams, ExecuteParams, CommandStore } from "./types";
 import { handleManageCommand } from "./handlers/manage";
 import { handleExecuteCommand } from "./handlers/execute";
+import { DEBUG } from "./constants";
 
 const COMMANDS_FILE = "commands.json";
 
@@ -51,8 +52,10 @@ class UserCommandsPlugin extends Plugin {
    */
   async actions(config: ActionsConfig = {}): Promise<void> {
     const actions = Array.isArray(config.actions) ? config.actions : [];
+    if (DEBUG) this.log(`[actions] received ${actions.length} action(s)`);
 
     for (const action of actions) {
+      if (DEBUG) this.log(`[actions] processing type: "${action?.type}"`);
       if (action?.type === "manage_command") {
         await handleManageCommand(action.value as ManageParams, {
           commands: this.commands,

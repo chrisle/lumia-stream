@@ -60,27 +60,30 @@ export function parseManageMessage(
 /**
  * Normalizes allowed variables to correct case and strips invalid ones.
  *
- * - {{message}} and {{displayName}} are normalized to exact case (case-insensitive match)
- * - Any other {{xxx}} variables are stripped from the template
+ * - {message} and {displayname} are normalized to lowercase (case-insensitive match)
+ * - Any other {xxx} variables are stripped from the template
+ *
+ * Note: Single braces are used to avoid Lumia Stream's recursive variable expansion.
  *
  * @param template - The response template to normalize
  * @returns Template with normalized variables and invalid ones removed
  *
  * @example
- * normalizeAndStripVariables("Hello {{DISPLAYNAME}}!")
- * // Returns: "Hello {{displayName}}!"
+ * normalizeAndStripVariables("Hello {DISPLAYNAME}!")
+ * // Returns: "Hello {displayname}!"
  *
  * @example
- * normalizeAndStripVariables("{{username}} says {{MESSAGE}}")
- * // Returns: " says {{message}}" ({{username}} is stripped)
+ * normalizeAndStripVariables("{username} says {MESSAGE}")
+ * // Returns: " says {message}" ({username} is stripped)
  */
 export function normalizeAndStripVariables(template: string): string {
   // First normalize allowed variables to correct case
-  let result = template.replace(/\{\{message\}\}/gi, "{{message}}");
-  result = result.replace(/\{\{displayName\}\}/gi, "{{displayName}}");
+  let result = template.replace(/\{message\}/gi, "{message}");
+  result = result.replace(/\{displayname\}/gi, "{displayname}");
 
-  // Strip any remaining {{xxx}} variables that aren't allowed
-  result = result.replace(/\{\{(?!message\}\}|displayName\}\})[^}]+\}\}/gi, "");
+  // Strip any remaining {xxx} single-brace variables that aren't allowed
+  // But don't strip {{xxx}} double-brace Lumia variables
+  result = result.replace(/\{(?!\{)(?!message\}|displayname\})[^{}]+\}(?!\})/gi, "");
 
   return result;
 }
@@ -89,14 +92,15 @@ export function normalizeAndStripVariables(template: string): string {
  * Finds any variables in the template that aren't in the allowed list.
  *
  * @param template - The response template to check
- * @returns Array of invalid variable strings (e.g., ["{{username}}", "{{channel}}"])
+ * @returns Array of invalid variable strings (e.g., ["{username}", "{channel}"])
  *
  * @example
- * findInvalidVariables("Hello {{displayName}} from {{channel}}")
- * // Returns: ["{{channel}}"]
+ * findInvalidVariables("Hello {displayname} from {channel}")
+ * // Returns: ["{channel}"]
  */
 export function findInvalidVariables(template: string): string[] {
-  const matches = template.match(/\{\{[^}]+\}\}/g) || [];
+  // Match single-brace variables {xxx} but not double-brace {{xxx}}
+  const matches = template.match(/\{(?!\{)[^{}]+\}(?!\})/g) || [];
   const normalized = matches.map((v) => v.toLowerCase());
   const allowedLower = ALLOWED_VARIABLES.map((v) => v.toLowerCase());
   return matches.filter((_, i) => !allowedLower.includes(normalized[i]));

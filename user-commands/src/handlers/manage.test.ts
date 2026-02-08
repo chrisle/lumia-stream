@@ -30,7 +30,7 @@ describe("handleManageCommand", () => {
         expect.stringContaining("Usage:")
       );
       expect(mockSendResponse).toHaveBeenCalledWith(
-        expect.stringContaining("{{message}}")
+        expect.stringContaining("{message}")
       );
     });
   });
@@ -72,12 +72,12 @@ describe("handleManageCommand", () => {
   describe("add action", () => {
     it("should create a new command", async () => {
       await handleManageCommand(
-        { userId: "12345", displayName: "lexie", arguments: "add greet Hello {{displayName}}!" },
+        { userId: "12345", displayName: "lexie", arguments: "add greet Hello {displayname}!" },
         ctx
       );
 
       expect(commands.greet).toBeDefined();
-      expect(commands.greet.response).toBe("Hello {{displayName}}!");
+      expect(commands.greet.response).toBe("Hello {displayname}!");
       expect(commands.greet.creatorId).toBe("12345");
       expect(mockSaveCommands).toHaveBeenCalled();
       expect(mockSendResponse).toHaveBeenCalledWith(
@@ -120,12 +120,12 @@ describe("handleManageCommand", () => {
 
     it("should normalize and strip invalid variables", async () => {
       await handleManageCommand(
-        { userId: "12345", displayName: "lexie", arguments: "add greet {{USERNAME}} {{DISPLAYNAME}}" },
+        { userId: "12345", displayName: "lexie", arguments: "add greet {USERNAME} {DISPLAYNAME}" },
         ctx
       );
 
-      // {{USERNAME}} should be stripped, {{DISPLAYNAME}} normalized
-      expect(commands.greet.response).toBe(" {{displayName}}");
+      // {USERNAME} should be stripped, {DISPLAYNAME} normalized
+      expect(commands.greet.response).toBe(" {displayname}");
     });
   });
 

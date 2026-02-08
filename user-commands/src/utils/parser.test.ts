@@ -7,20 +7,20 @@ import {
 describe("parseManageMessage", () => {
   describe("valid actions", () => {
     it("should parse 'add' action with command and response", () => {
-      const result = parseManageMessage("add greet Hello {{displayName}}!");
+      const result = parseManageMessage("add greet Hello {displayname}!");
       expect(result).toEqual({
         action: "add",
         commandName: "greet",
-        response: "Hello {{displayName}}!",
+        response: "Hello {displayname}!",
       });
     });
 
     it("should parse 'edit' action with command and response", () => {
-      const result = parseManageMessage("edit greet Goodbye {{displayName}}!");
+      const result = parseManageMessage("edit greet Goodbye {displayname}!");
       expect(result).toEqual({
         action: "edit",
         commandName: "greet",
-        response: "Goodbye {{displayName}}!",
+        response: "Goodbye {displayname}!",
       });
     });
 
@@ -79,19 +79,19 @@ describe("parseManageMessage", () => {
   });
 
   describe("variable normalization in response", () => {
-    it("should normalize {{MESSAGE}} to {{message}}", () => {
-      const result = parseManageMessage("add greet {{MESSAGE}}");
-      expect(result?.response).toBe("{{message}}");
+    it("should normalize {MESSAGE} to {message}", () => {
+      const result = parseManageMessage("add greet {MESSAGE}");
+      expect(result?.response).toBe("{message}");
     });
 
-    it("should normalize {{DISPLAYNAME}} to {{displayName}}", () => {
-      const result = parseManageMessage("add greet Hello {{DISPLAYNAME}}!");
-      expect(result?.response).toBe("Hello {{displayName}}!");
+    it("should normalize {DISPLAYNAME} to {displayname}", () => {
+      const result = parseManageMessage("add greet Hello {DISPLAYNAME}!");
+      expect(result?.response).toBe("Hello {displayname}!");
     });
 
     it("should strip invalid variables", () => {
-      const result = parseManageMessage("add greet {{username}} says {{message}}");
-      expect(result?.response).toBe(" says {{message}}");
+      const result = parseManageMessage("add greet {username} says {message}");
+      expect(result?.response).toBe(" says {message}");
     });
   });
 
@@ -103,9 +103,9 @@ describe("parseManageMessage", () => {
 
     it("should handle response with multiple variables", () => {
       const result = parseManageMessage(
-        "add greet {{displayName}} says: {{message}}"
+        "add greet {displayname} says: {message}"
       );
-      expect(result?.response).toBe("{{displayName}} says: {{message}}");
+      expect(result?.response).toBe("{displayname} says: {message}");
     });
   });
 
@@ -137,35 +137,35 @@ describe("parseManageMessage", () => {
 });
 
 describe("normalizeAndStripVariables", () => {
-  it("should normalize {{message}} case", () => {
-    expect(normalizeAndStripVariables("{{MESSAGE}}")).toBe("{{message}}");
-    expect(normalizeAndStripVariables("{{Message}}")).toBe("{{message}}");
-    expect(normalizeAndStripVariables("{{mEsSaGe}}")).toBe("{{message}}");
+  it("should normalize {message} case", () => {
+    expect(normalizeAndStripVariables("{MESSAGE}")).toBe("{message}");
+    expect(normalizeAndStripVariables("{Message}")).toBe("{message}");
+    expect(normalizeAndStripVariables("{mEsSaGe}")).toBe("{message}");
   });
 
-  it("should normalize {{displayName}} case", () => {
-    expect(normalizeAndStripVariables("{{DISPLAYNAME}}")).toBe("{{displayName}}");
-    expect(normalizeAndStripVariables("{{displayname}}")).toBe("{{displayName}}");
-    expect(normalizeAndStripVariables("{{DisplayName}}")).toBe("{{displayName}}");
+  it("should normalize {displayname} case", () => {
+    expect(normalizeAndStripVariables("{DISPLAYNAME}")).toBe("{displayname}");
+    expect(normalizeAndStripVariables("{displayname}")).toBe("{displayname}");
+    expect(normalizeAndStripVariables("{DisplayName}")).toBe("{displayname}");
   });
 
   it("should strip invalid variables", () => {
-    expect(normalizeAndStripVariables("{{username}}")).toBe("");
-    expect(normalizeAndStripVariables("{{channel}}")).toBe("");
-    expect(normalizeAndStripVariables("{{game}}")).toBe("");
-    expect(normalizeAndStripVariables("{{title}}")).toBe("");
+    expect(normalizeAndStripVariables("{username}")).toBe("");
+    expect(normalizeAndStripVariables("{channel}")).toBe("");
+    expect(normalizeAndStripVariables("{game}")).toBe("");
+    expect(normalizeAndStripVariables("{title}")).toBe("");
   });
 
   it("should preserve text around stripped variables", () => {
-    expect(normalizeAndStripVariables("Hello {{username}} there")).toBe(
+    expect(normalizeAndStripVariables("Hello {username} there")).toBe(
       "Hello  there"
     );
   });
 
   it("should handle mixed valid and invalid variables", () => {
     expect(
-      normalizeAndStripVariables("{{username}} {{displayName}} {{channel}}")
-    ).toBe(" {{displayName}} ");
+      normalizeAndStripVariables("{username} {displayname} {channel}")
+    ).toBe(" {displayname} ");
   });
 
   it("should handle text without variables", () => {
@@ -174,26 +174,26 @@ describe("normalizeAndStripVariables", () => {
 
   it("should handle multiple occurrences of same variable", () => {
     expect(
-      normalizeAndStripVariables("{{MESSAGE}} and {{message}}")
-    ).toBe("{{message}} and {{message}}");
+      normalizeAndStripVariables("{MESSAGE} and {message}")
+    ).toBe("{message} and {message}");
   });
 });
 
 describe("findInvalidVariables", () => {
   it("should return empty array for valid variables only", () => {
-    expect(findInvalidVariables("{{message}} {{displayName}}")).toEqual([]);
+    expect(findInvalidVariables("{message} {displayname}")).toEqual([]);
   });
 
   it("should find invalid variables", () => {
-    expect(findInvalidVariables("{{username}}")).toEqual(["{{username}}"]);
-    expect(findInvalidVariables("{{channel}} {{game}}")).toEqual([
-      "{{channel}}",
-      "{{game}}",
+    expect(findInvalidVariables("{username}")).toEqual(["{username}"]);
+    expect(findInvalidVariables("{channel} {game}")).toEqual([
+      "{channel}",
+      "{game}",
     ]);
   });
 
   it("should be case-insensitive for valid variables", () => {
-    expect(findInvalidVariables("{{MESSAGE}} {{DISPLAYNAME}}")).toEqual([]);
+    expect(findInvalidVariables("{MESSAGE} {DISPLAYNAME}")).toEqual([]);
   });
 
   it("should return empty array for text without variables", () => {
@@ -202,7 +202,7 @@ describe("findInvalidVariables", () => {
 
   it("should find only invalid variables in mixed text", () => {
     expect(
-      findInvalidVariables("{{displayName}} says {{username}}: {{message}}")
-    ).toEqual(["{{username}}"]);
+      findInvalidVariables("{displayname} says {username}: {message}")
+    ).toEqual(["{username}"]);
   });
 });

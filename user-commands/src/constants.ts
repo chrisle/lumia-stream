@@ -1,10 +1,17 @@
 /**
- * Variables that users can include in custom command responses.
- * These are replaced by Lumia Stream at runtime:
- * - {{message}} - The arguments passed with the command
- * - {{displayname}} - The display name of the user who triggered the command
+ * Set to true to enable debug logging throughout the plugin.
  */
-export const ALLOWED_VARIABLES: string[] = ["{{message}}", "{{displayname}}"];
+export const DEBUG = false;
+
+/**
+ * Variables that users can include in custom command responses.
+ * These are replaced by the plugin at runtime:
+ * - {message} - The arguments passed with the command
+ * - {displayname} - The display name of the user who triggered the command
+ *
+ * Note: Single braces are used to avoid Lumia Stream's recursive variable expansion.
+ */
+export const ALLOWED_VARIABLES: string[] = ["{message}", "{displayname}"];
 
 /**
  * Valid actions for the !command management system.
