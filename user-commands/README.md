@@ -85,14 +85,9 @@ Use these variables in command responses:
 
 ## Permissions
 
-| Role       | Can Create | Can Edit Own | Can Edit Any | Can Delete Own | Can Delete Any |
-| ---------- | ---------- | ------------ | ------------ | -------------- | -------------- |
-| Regular    | No         | -            | -            | -              | -              |
-| Tier 1 Sub | No         | -            | -            | -              | -              |
-| Tier 2 Sub | Yes        | Yes          | No           | Yes            | No             |
-| Tier 3 Sub | Yes        | Yes          | No           | Yes            | No             |
-| VIP        | Yes        | Yes          | No           | Yes            | No             |
-| Moderator  | Yes        | Yes          | Yes          | Yes            | Yes            |
+Permissions are enforced by Lumia Stream (for example via separate rules per
+user level). The plugin itself assumes that anyone who can trigger the action
+is allowed to manage their own commands.
 
 ## Chat Match Configuration
 
@@ -106,10 +101,6 @@ Configure these Chat Match rules in Lumia Stream:
   - `username`: `{username}`
   - `displayName`: `{displayName}`
   - `message`: `{message}` (everything after `!command `)
-  - `isMod`: `{isMod}`
-  - `isVip`: `{isVip}`
-  - `isTier2`: `{isTier2}`
-  - `isTier3`: `{isTier3}`
 
 ### Rule 2: Execute Custom Commands
 

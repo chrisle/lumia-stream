@@ -1,21 +1,21 @@
 {
   "id": "user_commands",
   "name": "User Commands",
-  "version": "1.0.0",
-  "author": "User Commands Plugin",
-  "email": "",
+  "version": "0.9.0-beta.1",
+  "author": "TRIODEOfficial",
+  "email": "chris@triodemusic.com",
   "website": "",
-  "repository": "",
-  "description": "Allow privileged viewers (VIP, Tier 2/3 subs, mods) to create, edit, and delete custom chat commands.",
+  "repository": "https://github.com/chrisle/lumia-stream",
+  "description": "Allow viewers to create their own custom chat commands.",
   "license": "MIT",
   "lumiaVersion": "^9.0.0",
   "category": "chat",
   "keywords": "commands, chat, twitch, custom, vip, subscriber",
   "icon": "",
-  "changelog": "",
+  "changelog": "### v0.9.0-beta.1\n- Initial beta release\n- Add, edit, delete, and list custom commands\n- Support for {{displayName}} and {{message}} variables",
   "config": {
     "settings": [],
-    "settings_tutorial": "---\n### User Commands Plugin\nThis plugin allows privileged viewers to create their own chat commands.\n\n**Who can create commands:**\n- VIPs\n- Tier 2 Subscribers\n- Tier 3 Subscribers\n- Moderators\n\n**Usage:**\n- `!command add <name> <response>` - Create a command\n- `!command edit <name> <response>` - Edit a command\n- `!command delete <name>` - Delete a command\n- `!command list` - List all commands\n\n**Supported Variables:**\n- `{displayName}` - Display name of user\n- `{username}` - Username of user\n- `{channel}` - Channel name\n- `{game}` - Current game\n- `{title}` - Stream title\n---",
+    "settings_tutorial": "---\n### User Commands Plugin\nThis plugin lets viewers create their own chat commands.\n\n**Permissions**\nConfigure permissions in Lumia Stream (for example, separate rules per user level).\n\n**Usage:**\n- `!command add <name> <response>` - Create a command\n- `!command edit <name> <response>` - Edit a command\n- `!command delete <name>` - Delete a command\n- `!command list` - List all commands\n\n**Supported Variables:**\n- `{{displayName}}` - Display name of user\n- `{{message}}` - Arguments passed to the command\n---",
     "actions_tutorial": "---\n### Manage Command\nUse this action with Chat Match to handle `!command add/edit/delete/list` messages.\n\n### Execute Command\nUse this action with Chat Match to execute custom commands when viewers type them.\n---",
     "actions": [
       {
@@ -27,44 +27,23 @@
             "key": "username",
             "label": "Username",
             "type": "text",
-            "defaultValue": ""
+            "placeholder": "The username of the sender",
+            "defaultValue": "{{username}}",
+            "validation": {
+              "pattern": "{{username}}"
+            },
+            "allowVariables": true
           },
           {
-            "key": "displayName",
-            "label": "Display Name",
+            "key": "args",
+            "label": "Arguments",
             "type": "text",
-            "defaultValue": ""
-          },
-          {
-            "key": "message",
-            "label": "Message",
-            "type": "text",
-            "defaultValue": "",
-            "helperText": "Everything after !command (e.g., 'add greet Hello!')"
-          },
-          {
-            "key": "isMod",
-            "label": "Is Moderator",
-            "type": "checkbox",
-            "defaultValue": false
-          },
-          {
-            "key": "isVip",
-            "label": "Is VIP",
-            "type": "checkbox",
-            "defaultValue": false
-          },
-          {
-            "key": "isTier2",
-            "label": "Is Tier 2 Sub",
-            "type": "checkbox",
-            "defaultValue": false
-          },
-          {
-            "key": "isTier3",
-            "label": "Is Tier 3 Sub",
-            "type": "checkbox",
-            "defaultValue": false
+            "placeholder": "The arguments passed with the command (e.g. 'add greet Hello!')",
+            "defaultValue": "{{message}}",
+            "validation": {
+              "pattern": "{{message}}"
+            },
+            "allowVariables": true
           }
         ]
       },
@@ -74,41 +53,26 @@
         "description": "Execute a user-created custom command",
         "fields": [
           {
-            "key": "commandName",
-            "label": "Command Name",
+            "key": "command",
+            "label": "Command",
             "type": "text",
-            "defaultValue": "",
-            "helperText": "Name of the command (without !)"
+            "placeholder": "The command name (e.g. 'greet' for !greet)",
+            "defaultValue": "{{command}}",
+            "validation": {
+              "pattern": "{{command}}"
+            },
+            "allowVariables": true
           },
           {
-            "key": "username",
-            "label": "Username",
+            "key": "args",
+            "label": "Arguments",
             "type": "text",
-            "defaultValue": ""
-          },
-          {
-            "key": "displayName",
-            "label": "Display Name",
-            "type": "text",
-            "defaultValue": ""
-          },
-          {
-            "key": "channel",
-            "label": "Channel",
-            "type": "text",
-            "defaultValue": ""
-          },
-          {
-            "key": "game",
-            "label": "Game",
-            "type": "text",
-            "defaultValue": ""
-          },
-          {
-            "key": "title",
-            "label": "Title",
-            "type": "text",
-            "defaultValue": ""
+            "placeholder": "The arguments passed with the command (e.g. 'Hello!')",
+            "defaultValue": "{{message}}",
+            "validation": {
+              "pattern": "{{message}}"
+            },
+            "allowVariables": true
           }
         ]
       }
