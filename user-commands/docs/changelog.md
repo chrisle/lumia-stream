@@ -1,6 +1,6 @@
 ## TRIODE's User Commands
 ---
-Let your viewers create their own custom chat commands! Reward your VIPs and subscribers by using "User Level" permissions so only they can create commands. Anyone in chat can trigger them, making your stream more interactive and fun.
+Let your community create and share custom chat commands! Give viewers the power to add their own commands that anyone in chat can use.
 
 **Example:**
 ```
