@@ -12,6 +12,10 @@ export interface ManageContext {
   sendResponse: (message: string) => Promise<void>;
   /** Function to persist command changes */
   saveCommands: () => Promise<void>;
+  /** Function to log debug messages */
+  log: (message: string) => void;
+  /** Whether mods can modify anyone's commands */
+  allowModsToManage: boolean;
 }
 
 /**
@@ -32,7 +36,10 @@ export async function handleManageCommand(
   params: ManageParams,
   ctx: ManageContext
 ): Promise<void> {
-  const displayName = params?.username || "User";
+  const userId = params?.userId || "";
+  const displayName = params?.displayName || "User";
+  const isMod = params?.isMod === "true";
+  const isBroadcaster = params?.isBroadcaster === "true";
 
   const parsed = parseManageMessage(params?.arguments);
 
@@ -53,13 +60,13 @@ export async function handleManageCommand(
       await handleList(displayName, ctx);
       break;
     case "add":
-      await handleAdd(params, displayName, commandName, response, ctx);
+      await handleAdd(userId, displayName, commandName, response, ctx);
       break;
     case "edit":
-      await handleEdit(params, displayName, commandName, response, ctx);
+      await handleEdit(userId, isMod, isBroadcaster, displayName, commandName, response, ctx);
       break;
     case "delete":
-      await handleDelete(params, displayName, commandName, ctx);
+      await handleDelete(userId, isMod, isBroadcaster, displayName, commandName, ctx);
       break;
   }
 }
@@ -89,7 +96,7 @@ async function handleList(
 }
 
 async function handleAdd(
-  params: ManageParams,
+  userId: string,
   displayName: string,
   commandName: string,
   response: string,
@@ -112,7 +119,7 @@ async function handleAdd(
   const now = new Date().toISOString();
   ctx.commands[commandName] = {
     response,
-    creator: (params?.username || "").toLowerCase(),
+    creatorId: userId,
     createdAt: now,
     updatedAt: now,
   };
@@ -121,10 +128,13 @@ async function handleAdd(
   await ctx.sendResponse(
     `@${displayName} Command "!${commandName}" has been created.`
   );
+  ctx.log(`${displayName} created !${commandName}`);
 }
 
 async function handleEdit(
-  params: ManageParams,
+  userId: string,
+  isMod: boolean,
+  isBroadcaster: boolean,
   displayName: string,
   commandName: string,
   response: string,
@@ -139,7 +149,7 @@ async function handleEdit(
     return;
   }
 
-  if (!canManageCommand(params, command)) {
+  if (!canManageCommand(userId, isMod, isBroadcaster, command, ctx.allowModsToManage)) {
     await ctx.sendResponse(
       `@${displayName} You can only edit commands you created.`
     );
@@ -153,10 +163,13 @@ async function handleEdit(
   await ctx.sendResponse(
     `@${displayName} Command "!${commandName}" has been updated.`
   );
+  ctx.log(`${displayName} edited !${commandName}`);
 }
 
 async function handleDelete(
-  params: ManageParams,
+  userId: string,
+  isMod: boolean,
+  isBroadcaster: boolean,
   displayName: string,
   commandName: string,
   ctx: ManageContext
@@ -170,7 +183,7 @@ async function handleDelete(
     return;
   }
 
-  if (!canManageCommand(params, command)) {
+  if (!canManageCommand(userId, isMod, isBroadcaster, command, ctx.allowModsToManage)) {
     await ctx.sendResponse(
       `@${displayName} You can only delete commands you created.`
     );
@@ -182,4 +195,5 @@ async function handleDelete(
   await ctx.sendResponse(
     `@${displayName} Command "!${commandName}" has been deleted.`
   );
+  ctx.log(`${displayName} deleted !${commandName}`);
 }

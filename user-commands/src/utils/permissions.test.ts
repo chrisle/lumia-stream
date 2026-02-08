@@ -1,48 +1,72 @@
 import { canManageCommand } from "./permissions";
-import { CommandData, ManageParams } from "../types";
+import { CommandData } from "../types";
 
 describe("canManageCommand", () => {
-  const createCommand = (creator: string): CommandData => ({
+  const createCommand = (creatorId: string): CommandData => ({
     response: "test response",
-    creator,
+    creatorId,
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
   });
 
-  it("should return true when username matches creator", () => {
-    const params: ManageParams = { username: "lexie" };
-    const command = createCommand("lexie");
-    expect(canManageCommand(params, command)).toBe(true);
+  describe("ownership checks", () => {
+    it("should return true when userId matches creatorId", () => {
+      const command = createCommand("12345");
+      expect(canManageCommand("12345", false, false, command)).toBe(true);
+    });
+
+    it("should return false when userId does not match creatorId", () => {
+      const command = createCommand("12345");
+      expect(canManageCommand("67890", false, false, command)).toBe(false);
+    });
+
+    it("should return false when userId is empty", () => {
+      const command = createCommand("12345");
+      expect(canManageCommand("", false, false, command)).toBe(false);
+    });
   });
 
-  it("should return false when username does not match creator", () => {
-    const params: ManageParams = { username: "other" };
-    const command = createCommand("lexie");
-    expect(canManageCommand(params, command)).toBe(false);
+  describe("broadcaster permissions", () => {
+    it("should allow broadcaster to manage any command", () => {
+      const command = createCommand("12345");
+      expect(canManageCommand("67890", false, true, command, false)).toBe(true);
+    });
+
+    it("should allow broadcaster even when allowModsToManage is false", () => {
+      const command = createCommand("12345");
+      expect(canManageCommand("67890", false, true, command, false)).toBe(true);
+    });
   });
 
-  it("should be case-insensitive for username comparison", () => {
-    const params: ManageParams = { username: "LEXIE" };
-    const command = createCommand("lexie");
-    expect(canManageCommand(params, command)).toBe(true);
-  });
+  describe("mod permissions", () => {
+    it("should allow mod to manage when allowModsToManage is true", () => {
+      const command = createCommand("12345");
+      expect(canManageCommand("67890", true, false, command, true)).toBe(true);
+    });
 
-  it("should handle uppercase creator", () => {
-    const params: ManageParams = { username: "lexie" };
-    const command = createCommand("LEXIE");
-    // Creator is stored lowercase, so this should fail
-    expect(canManageCommand(params, command)).toBe(false);
-  });
+    it("should not allow mod to manage when allowModsToManage is false", () => {
+      const command = createCommand("12345");
+      expect(canManageCommand("67890", true, false, command, false)).toBe(false);
+    });
 
-  it("should return false when username is undefined", () => {
-    const params: ManageParams = {};
-    const command = createCommand("lexie");
-    expect(canManageCommand(params, command)).toBe(false);
-  });
+    it("should not allow non-mod when allowModsToManage is true", () => {
+      const command = createCommand("12345");
+      expect(canManageCommand("67890", false, false, command, true)).toBe(false);
+    });
 
-  it("should return false when params is empty object", () => {
-    const params: ManageParams = {};
-    const command = createCommand("lexie");
-    expect(canManageCommand(params, command)).toBe(false);
+    it("should allow owner even when not a mod", () => {
+      const command = createCommand("12345");
+      expect(canManageCommand("12345", false, false, command, true)).toBe(true);
+    });
+
+    it("should allow owner when allowModsToManage is false", () => {
+      const command = createCommand("12345");
+      expect(canManageCommand("12345", false, false, command, false)).toBe(true);
+    });
+
+    it("should allow owner when also a mod", () => {
+      const command = createCommand("12345");
+      expect(canManageCommand("12345", true, false, command, true)).toBe(true);
+    });
   });
 });

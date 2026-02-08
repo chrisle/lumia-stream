@@ -1,24 +1,41 @@
-import { ManageParams, CommandData } from "../types";
+import { CommandData } from "../types";
 
 /**
  * Checks if a user has permission to manage (edit/delete) a command.
- * Users can only manage commands they created.
+ * Users can manage commands they created, if they are the broadcaster,
+ * or if they are a mod and the allowModsToManage setting is enabled.
  *
- * @param params - The manage action parameters containing the username
+ * @param userId - The user's ID
+ * @param isMod - Whether the user is a moderator
+ * @param isBroadcaster - Whether the user is the broadcaster
  * @param command - The command data to check ownership of
- * @returns True if the user is the creator of the command
+ * @param allowModsToManage - Whether mods can modify anyone's commands
+ * @returns True if the user can manage the command
  *
  * @example
- * canManageCommand({ username: "lexie" }, { creator: "lexie", ... })
- * // Returns: true
+ * canManageCommand("12345", false, false, { creatorId: "12345", ... }, false)
+ * // Returns: true (is owner)
  *
  * @example
- * canManageCommand({ username: "other" }, { creator: "lexie", ... })
- * // Returns: false
+ * canManageCommand("67890", false, true, { creatorId: "12345", ... }, false)
+ * // Returns: true (is broadcaster)
+ *
+ * @example
+ * canManageCommand("67890", true, false, { creatorId: "12345", ... }, true)
+ * // Returns: true (mod with allowModsToManage enabled)
+ *
+ * @example
+ * canManageCommand("67890", true, false, { creatorId: "12345", ... }, false)
+ * // Returns: false (mod but allowModsToManage is disabled)
  */
 export function canManageCommand(
-  params: ManageParams,
-  command: CommandData
+  userId: string,
+  isMod: boolean,
+  isBroadcaster: boolean,
+  command: CommandData,
+  allowModsToManage: boolean = false
 ): boolean {
-  return command.creator === params?.username?.toLowerCase();
+  const isOwner = command.creatorId === userId;
+  const isModWithPermission = allowModsToManage && isMod;
+  return isOwner || isBroadcaster || isModWithPermission;
 }

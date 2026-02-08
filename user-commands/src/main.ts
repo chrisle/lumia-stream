@@ -3,6 +3,8 @@ import { ActionsConfig, ManageParams, ExecuteParams, CommandStore } from "./type
 import { handleManageCommand } from "./handlers/manage";
 import { handleExecuteCommand } from "./handlers/execute";
 
+const COMMANDS_FILE = "commands.json";
+
 /**
  * User Commands Plugin for Lumia Stream.
  *
@@ -20,19 +22,25 @@ class UserCommandsPlugin extends Plugin {
   /** In-memory store of custom commands, persisted to Lumia variables */
   private commands: CommandStore = {};
 
+  /** Whether mods can modify anyone's commands */
+  private allowModsToManage: boolean = false;
+
   /**
    * Called when the plugin is loaded.
-   * Loads persisted commands from Lumia Stream variables.
+   * Loads persisted commands and settings from Lumia Stream.
    */
   async onload(): Promise<void> {
+    await this.loadSettings();
     await this.loadCommands();
+    const commandCount = Object.keys(this.commands).length;
+    this.log(`Loaded ${commandCount} command${commandCount !== 1 ? "s" : ""}`);
   }
 
   /**
    * Called when the plugin is unloaded.
    */
   async onunload(): Promise<void> {
-    // Cleanup if needed
+    // Nothing to clean up
   }
 
   /**
@@ -50,40 +58,78 @@ class UserCommandsPlugin extends Plugin {
           commands: this.commands,
           sendResponse: this.sendResponse.bind(this),
           saveCommands: this.saveCommands.bind(this),
+          log: this.log.bind(this),
+          allowModsToManage: this.allowModsToManage,
         });
       } else if (action?.type === "execute_command") {
         await handleExecuteCommand(action.value as ExecuteParams, {
           commands: this.commands,
           sendResponse: this.sendResponse.bind(this),
+          log: this.log.bind(this),
         });
       }
     }
   }
 
   /**
-   * Loads commands from Lumia Stream variable storage.
-   * Falls back to empty object on error.
+   * Loads plugin settings from Lumia Stream.
    */
-  private async loadCommands(): Promise<void> {
+  private async loadSettings(): Promise<void> {
     try {
-      const commandsJson = await this.lumia.getVariable("triode-user-commands");
-      this.commands = commandsJson ? JSON.parse(commandsJson as string) : {};
-    } catch (error) {
-      this.commands = {};
-      const message = error instanceof Error ? error.message : String(error);
-      await this.lumia.addLog(`Failed to load commands: ${message}`);
+      const settings = await this.lumia.getSettings();
+      this.allowModsToManage = settings?.allowModsToManage === true;
+    } catch {
+      this.allowModsToManage = false;
     }
   }
 
   /**
-   * Persists current commands to Lumia Stream variable storage.
+   * Loads commands from Lumia Stream variable storage or file.
+   * Tries variable first, then falls back to file, then empty object.
+   */
+  private async loadCommands(): Promise<void> {
+    // Try loading from variable first
+    try {
+      const commandsJson = await this.lumia.getVariable("triode-user-commands");
+      if (commandsJson) {
+        this.commands = JSON.parse(commandsJson as string);
+        return;
+      }
+    } catch {
+      // Variable load failed, try file
+    }
+
+    // Fall back to file
+    try {
+      const fileContent = await this.lumia.readFile(COMMANDS_FILE);
+      if (typeof fileContent === "string" && fileContent) {
+        this.commands = JSON.parse(fileContent);
+        return;
+      }
+    } catch {
+      // File load failed
+    }
+
+    this.commands = {};
+  }
+
+  /**
+   * Persists current commands to Lumia Stream variable storage and file.
    */
   private async saveCommands(): Promise<void> {
-    try {
-      await this.lumia.setVariable("triode-user-commands", JSON.stringify(this.commands));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      await this.lumia.addLog(`Failed to save commands: ${message}`);
+    const commandsJson = JSON.stringify(this.commands, null, 2);
+
+    // Save to both variable and file
+    const results = await Promise.allSettled([
+      this.lumia.setVariable("triode-user-commands", commandsJson),
+      this.lumia.writeFile({ path: COMMANDS_FILE, message: commandsJson }),
+    ]);
+
+    // Log any save errors
+    for (const result of results) {
+      if (result.status === "rejected") {
+        this.log(`Error saving: ${result.reason}`);
+      }
     }
   }
 
@@ -98,9 +144,18 @@ class UserCommandsPlugin extends Plugin {
       await this.lumia.setVariable("lastResponse", message);
       await this.lumia.chatbot({ message });
     } catch (error) {
-      const errMessage = error instanceof Error ? error.message : String(error);
-      await this.lumia.addLog(`Failed to send chat: ${errMessage}`);
+      const msg = error instanceof Error ? error.message : String(error);
+      this.log(`Error sending chat: ${msg}`);
     }
+  }
+
+  /**
+   * Logs a message to Lumia Stream's log panel.
+   *
+   * @param message - The message to log
+   */
+  private log(message: string): void {
+    this.lumia.addLog(message);
   }
 }
 

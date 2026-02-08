@@ -9,9 +9,10 @@
  *   1. Clean previous build artifacts
  *   2. Compile TypeScript
  *   3. Minify JavaScript files
- *   4. Copy build output to root (required by lumia-plugin)
- *   5. Run lumia-plugin build
- *   6. Clean up root artifacts
+ *   4. Update manifest with docs content
+ *   5. Create staging directory with only required files
+ *   6. Run lumia-plugin build on staging directory
+ *   7. Clean up staging directory
  */
 
 const { execSync } = require("child_process");
@@ -22,7 +23,19 @@ const { minify } = require("terser");
 const ROOT = path.resolve(__dirname, "..");
 const BUILD_DIR = path.join(ROOT, "build");
 const DIST_DIR = path.join(ROOT, "dist");
-const OUTPUT_FILE = path.join(DIST_DIR, "triode_user_commands.lumiaplugin");
+const DOCS_DIR = path.join(ROOT, "docs");
+const STAGING_DIR = path.join(ROOT, ".staging");
+const MANIFEST_FILE = path.join(ROOT, "manifest.json");
+const PACKAGE_FILE = path.join(ROOT, "package.json");
+
+/**
+ * Gets output filename from package.json name and version.
+ * @returns {string} Output file path
+ */
+function getOutputFile() {
+  const pkg = JSON.parse(fs.readFileSync(PACKAGE_FILE, "utf-8"));
+  return path.join(DIST_DIR, `${pkg.name}-${pkg.version}.lumiaplugin`);
+}
 
 /**
  * Executes a command and prints output.
@@ -68,31 +81,52 @@ function copyDir(src, dest) {
 }
 
 /**
- * Removes root-level build artifacts.
+ * Removes the staging directory.
  */
-function cleanRoot() {
-  const artifacts = [
-    "main.js",
-    "main.d.ts",
-    "types.js",
-    "types.d.ts",
-    "constants.js",
-    "constants.d.ts",
-    "handlers",
-    "utils",
-  ];
+function cleanStaging() {
+  if (fs.existsSync(STAGING_DIR)) {
+    fs.rmSync(STAGING_DIR, { recursive: true, force: true });
+  }
+}
 
-  for (const artifact of artifacts) {
-    const fullPath = path.join(ROOT, artifact);
-    if (fs.existsSync(fullPath)) {
-      const stat = fs.statSync(fullPath);
-      if (stat.isDirectory()) {
-        fs.rmSync(fullPath, { recursive: true, force: true });
-      } else {
-        fs.unlinkSync(fullPath);
-      }
+/**
+ * Removes old .lumiaplugin files from the dist directory.
+ */
+function cleanOldPlugins() {
+  if (!fs.existsSync(DIST_DIR)) {
+    return;
+  }
+
+  const files = fs.readdirSync(DIST_DIR);
+  let removed = 0;
+
+  for (const file of files) {
+    if (file.endsWith(".lumiaplugin")) {
+      fs.unlinkSync(path.join(DIST_DIR, file));
+      removed++;
     }
   }
+
+  if (removed > 0) {
+    console.log(`  Removed ${removed} old plugin file(s)`);
+  }
+}
+
+/**
+ * Creates staging directory with only the required plugin files.
+ * This avoids including node_modules, src, dist, and other dev files.
+ */
+function createStaging() {
+  cleanStaging();
+  fs.mkdirSync(STAGING_DIR, { recursive: true });
+
+  // Copy manifest.json
+  fs.copyFileSync(MANIFEST_FILE, path.join(STAGING_DIR, "manifest.json"));
+
+  // Copy compiled JavaScript from build directory
+  copyDir(BUILD_DIR, STAGING_DIR);
+
+  console.log("  Created staging directory with plugin files");
 }
 
 /**
@@ -158,11 +192,63 @@ async function minifyBuild() {
   );
 }
 
+/**
+ * Reads a markdown file and wraps it with --- delimiters.
+ * @param {string} filename - Name of the file in docs directory
+ * @returns {string} Content wrapped with ---\n prefix and \n--- suffix
+ */
+function readDocFile(filename) {
+  const filePath = path.join(DOCS_DIR, filename);
+  if (!fs.existsSync(filePath)) {
+    console.warn(`  Warning: ${filename} not found`);
+    return "";
+  }
+  const content = fs.readFileSync(filePath, "utf-8").trimEnd();
+  return `---\n${content}\n---`;
+}
+
+/**
+ * Updates manifest.json with content from package.json and docs/*.md files.
+ */
+function updateManifest() {
+  const manifest = JSON.parse(fs.readFileSync(MANIFEST_FILE, "utf-8"));
+  const pkg = JSON.parse(fs.readFileSync(PACKAGE_FILE, "utf-8"));
+
+  // Sync fields from package.json
+  manifest.id = pkg.name.replace(/-/g, "_");
+  manifest.version = pkg.version;
+  manifest.author = pkg.author;
+  manifest.email = pkg.email;
+  manifest.license = pkg.license;
+  manifest.repository = pkg.repository;
+  manifest.keywords = pkg.keywords.join(", ");
+
+  // Update tutorials
+  manifest.config.settings_tutorial = readDocFile("settings_tutorial.md");
+  manifest.config.actions_tutorial = readDocFile("actions_tutorial.md");
+
+  // Update changelog and description if they exist
+  const changelogPath = path.join(DOCS_DIR, "changelog.md");
+  if (fs.existsSync(changelogPath)) {
+    manifest.changelog = fs.readFileSync(changelogPath, "utf-8").trimEnd();
+  }
+
+  const descriptionPath = path.join(DOCS_DIR, "description.md");
+  if (fs.existsSync(descriptionPath)) {
+    manifest.description = fs.readFileSync(descriptionPath, "utf-8").trimEnd();
+  }
+
+  fs.writeFileSync(MANIFEST_FILE, JSON.stringify(manifest, null, 2) + "\n");
+  console.log("  Updated manifest with package.json and docs content");
+}
+
 async function main() {
   console.log("=== Packaging Lumia Stream Plugin ===");
 
   // Step 1: Clean
   run("node scripts/clean.js", "Cleaning previous build");
+  console.log("\nCleaning old plugin files...");
+  cleanOldPlugins();
 
   // Step 2: Compile TypeScript
   run("npx tsc", "Compiling TypeScript");
@@ -171,22 +257,27 @@ async function main() {
   console.log("\nMinifying JavaScript...");
   await minifyBuild();
 
-  // Step 4: Copy build to root
-  console.log("\nCopying build output to root...");
-  copyDir(BUILD_DIR, ROOT);
+  // Step 4: Update manifest with docs content
+  console.log("\nUpdating manifest...");
+  updateManifest();
 
-  // Step 5: Run lumia-plugin build
+  // Step 5: Create staging directory with only required files
+  console.log("\nCreating staging directory...");
+  createStaging();
+
+  // Step 6: Run lumia-plugin build on staging directory
+  const outputFile = getOutputFile();
   run(
-    `npx lumia-plugin build . --out "${OUTPUT_FILE}"`,
+    `npx lumia-plugin build "${STAGING_DIR}" --out "${outputFile}"`,
     "Building plugin package"
   );
 
-  // Step 6: Clean up root
-  console.log("\nCleaning up root artifacts...");
-  cleanRoot();
+  // Step 7: Clean up staging directory
+  console.log("\nCleaning up staging directory...");
+  cleanStaging();
 
   console.log("\n=== Package Complete ===");
-  console.log(`Output: ${OUTPUT_FILE}`);
+  console.log(`Output: ${outputFile}`);
 }
 
 main().catch((err) => {

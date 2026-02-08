@@ -1,7 +1,7 @@
 {
-  "id": "user_commands",
-  "name": "User Commands",
-  "version": "0.9.0-beta.1",
+  "id": "triodeofficial_user_commands",
+  "name": "Custom User Commands",
+  "version": "0.9.0-beta.4",
   "author": "TRIODEOfficial",
   "email": "chris@triodemusic.com",
   "website": "",
@@ -12,10 +12,18 @@
   "category": "chat",
   "keywords": "commands, chat, twitch, custom, vip, subscriber",
   "icon": "",
-  "changelog": "### v0.9.0-beta.1\n- Initial beta release\n- Add, edit, delete, and list custom commands\n- Support for {{displayName}} and {{message}} variables",
+  "changelog": "## TRIODE's User Commands\n---\nLet your viewers create their own custom chat commands! Reward your VIPs and subscribers by using \"User Level\" permissions so only they can create commands. Anyone in chat can trigger them, making your stream more interactive and fun.\n\n**Example:**\n```\nTRIODEOfficial: !command add hug @{{displayname}} jumps into @{{message}}'s arms and gives a big hug!\nLumiaStreamBot: @TRIODEOfficial Command \"!hug\" has been created.\nLexie: !hug @TRIODEOfficial\nLumiaStreamBot: @Lexie jumps into @TRIODEOfficial's arms and gives a big hug!\n```\n\n---\n## Change log\n\n### v0.9.0-beta.1\n- Initial beta release\n- Add, edit, delete, and list custom commands\n- Support for {{displayname}} and {{message}} variables\n\n---\nMade with ❤️ in San Francisco, California by [@TRIODEOfficial](https://twitch.tv/TRIODEOfficial)",
   "config": {
-    "settings": [],
-    "settings_tutorial": "---\n### User Commands Plugin\nThis plugin lets viewers create their own chat commands.\n\n**Permissions**\nConfigure permissions in Lumia Stream (for example, separate rules per user level).\n\n**Usage:**\n- `!command add <name> <response>` - Create a command\n- `!command edit <name> <response>` - Edit a command\n- `!command delete <name>` - Delete a command\n- `!command list` - List all commands\n\n**Supported Variables:**\n- `{{displayName}}` - Display name of user\n- `{{message}}` - Arguments passed to the command\n---",
+    "settings": [
+      {
+        "key": "allowModsToManage",
+        "label": "Allow MODs to modify anyone's commands",
+        "type": "toggle",
+        "defaultValue": true,
+        "helperText": "When enabled, moderators can edit and delete any custom command, not just their own."
+      }
+    ],
+    "settings_tutorial": "---\n## TRIODE's User Commands\n---\nLet your viewers create their own custom chat commands! Reward your VIPs and subscribers by using \"User Level\" permissions so only they can create commands. Anyone in chat can trigger them, making your stream more interactive and fun.\n\n**Example:**\n```\nTRIODEOfficial: !command add hug @{{displayname}} jumps into @{{message}}'s arms and gives a big hug!\nLumiaStreamBot: @TRIODEOfficial Command \"!hug\" has been created.\nLexie: !hug @TRIODEOfficial\nLumiaStreamBot: @Lexie jumps into @TRIODEOfficial's arms and gives a big hug!\n```\n\n---\n### User Commands Plugin\nThis plugin lets viewers create their own chat commands.\n\n**Permissions**\nConfigure permissions in Lumia Stream (for example, separate rules per user level).\n\n**Usage:**\n- `!command add <name> <response>` - Create a command\n- `!command edit <name> <response>` - Edit a command\n- `!command delete <name>` - Delete a command\n- `!command list` - List all commands\n\n**Supported Variables:**\n- `{{displayname}}` - Display name of user\n- `{{message}}` - Arguments passed to the command\n---",
     "actions_tutorial": "---\n### Manage Command\nUse this action with Chat Match to handle `!command add/edit/delete/list` messages.\n\n### Execute Command\nUse this action with Chat Match to execute custom commands when viewers type them.\n---",
     "actions": [
       {
@@ -24,22 +32,65 @@
         "description": "Handle !command add/edit/delete/list operations",
         "fields": [
           {
-            "key": "username",
-            "label": "Username",
+            "key": "userId",
+            "label": "User ID",
             "type": "text",
-            "placeholder": "The username of the sender",
-            "defaultValue": "{{username}}",
+            "placeholder": "The unique ID of the sender",
+            "defaultValue": "{{userId}}",
+            "required": true,
+            "allowTyping": false,
             "validation": {
-              "pattern": "{{username}}"
+              "pattern": "{{userId}}"
             },
             "allowVariables": true
           },
           {
-            "key": "args",
+            "key": "displayName",
+            "label": "Display Name",
+            "type": "text",
+            "placeholder": "The display name of the sender",
+            "defaultValue": "{{displayname}}",
+            "required": true,
+            "allowTyping": false,
+            "validation": {
+              "pattern": "{{displayname}}"
+            },
+            "allowVariables": true
+          },
+          {
+            "key": "isMod",
+            "label": "Is Moderator",
+            "type": "text",
+            "placeholder": "Whether the user is a moderator",
+            "defaultValue": "{{userLevels.moderator}}",
+            "required": true,
+            "allowTyping": false,
+            "validation": {
+              "pattern": "{{userLevels.moderator}}"
+            },
+            "allowVariables": true
+          },
+          {
+            "key": "isBroadcaster",
+            "label": "Is Broadcaster",
+            "type": "text",
+            "placeholder": "Whether the user is the broadcaster",
+            "defaultValue": "{{userLevels.broadcaster}}",
+            "required": true,
+            "allowTyping": false,
+            "validation": {
+              "pattern": "{{userLevels.broadcaster}}"
+            },
+            "allowVariables": true
+          },
+          {
+            "key": "arguments",
             "label": "Arguments",
             "type": "text",
             "placeholder": "The arguments passed with the command (e.g. 'add greet Hello!')",
             "defaultValue": "{{message}}",
+            "required": true,
+            "allowTyping": false,
             "validation": {
               "pattern": "{{message}}"
             },
@@ -58,17 +109,21 @@
             "type": "text",
             "placeholder": "The command name (e.g. 'greet' for !greet)",
             "defaultValue": "{{command}}",
+            "required": true,
+            "allowTyping": false,
             "validation": {
               "pattern": "{{command}}"
             },
             "allowVariables": true
           },
           {
-            "key": "args",
+            "key": "arguments",
             "label": "Arguments",
             "type": "text",
             "placeholder": "The arguments passed with the command (e.g. 'Hello!')",
             "defaultValue": "{{message}}",
+            "required": true,
+            "allowTyping": false,
             "validation": {
               "pattern": "{{message}}"
             },

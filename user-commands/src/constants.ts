@@ -2,9 +2,9 @@
  * Variables that users can include in custom command responses.
  * These are replaced by Lumia Stream at runtime:
  * - {{message}} - The arguments passed with the command
- * - {{displayName}} - The display name of the user who triggered the command
+ * - {{displayname}} - The display name of the user who triggered the command
  */
-export const ALLOWED_VARIABLES: string[] = ["{{message}}", "{{displayName}}"];
+export const ALLOWED_VARIABLES: string[] = ["{{message}}", "{{displayname}}"];
 
 /**
  * Valid actions for the !command management system.

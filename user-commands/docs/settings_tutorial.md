@@ -1,3 +1,15 @@
+## TRIODE's User Commands
+---
+Let your viewers create their own custom chat commands! Reward your VIPs and subscribers by using "User Level" permissions so only they can create commands. Anyone in chat can trigger them, making your stream more interactive and fun.
+
+**Example:**
+```
+TRIODEOfficial: !command add hug @{{displayname}} jumps into @{{message}}'s arms and gives a big hug!
+LumiaStreamBot: @TRIODEOfficial Command "!hug" has been created.
+Lexie: !hug @TRIODEOfficial
+LumiaStreamBot: @Lexie jumps into @TRIODEOfficial's arms and gives a big hug!
+```
+
 ---
 ### User Commands Plugin
 This plugin lets viewers create their own chat commands.
@@ -12,6 +24,5 @@ Configure permissions in Lumia Stream (for example, separate rules per user leve
 - `!command list` - List all commands
 
 **Supported Variables:**
-- `{{displayName}}` - Display name of user
+- `{{displayname}}` - Display name of user
 - `{{message}}` - Arguments passed to the command
----

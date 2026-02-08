@@ -3,22 +3,25 @@ import { CommandStore } from "../types";
 
 describe("handleExecuteCommand", () => {
   let mockSendResponse: jest.Mock;
+  let mockLog: jest.Mock;
   let commands: CommandStore;
   let ctx: ExecuteContext;
 
   beforeEach(() => {
     mockSendResponse = jest.fn().mockResolvedValue(undefined);
+    mockLog = jest.fn();
     commands = {};
     ctx = {
       commands,
       sendResponse: mockSendResponse,
+      log: mockLog,
     };
   });
 
   it("should send the command response when command exists", async () => {
     commands.greet = {
       response: "Hello {{displayName}}!",
-      creator: "lexie",
+      creatorId: "12345",
       createdAt: "2024-01-01T00:00:00.000Z",
       updatedAt: "2024-01-01T00:00:00.000Z",
     };
@@ -31,7 +34,7 @@ describe("handleExecuteCommand", () => {
   it("should send response with {{message}} variable intact", async () => {
     commands.greet = {
       response: "{{displayName}} says: {{message}}",
-      creator: "lexie",
+      creatorId: "12345",
       createdAt: "2024-01-01T00:00:00.000Z",
       updatedAt: "2024-01-01T00:00:00.000Z",
     };
@@ -56,7 +59,7 @@ describe("handleExecuteCommand", () => {
   it("should handle case-insensitive command lookup", async () => {
     commands.greet = {
       response: "Hello!",
-      creator: "lexie",
+      creatorId: "12345",
       createdAt: "2024-01-01T00:00:00.000Z",
       updatedAt: "2024-01-01T00:00:00.000Z",
     };

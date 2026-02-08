@@ -4,8 +4,8 @@
 export interface CommandData {
   /** The response template with {{message}} and {{displayName}} variables */
   response: string;
-  /** Lowercase username of the command creator */
-  creator: string;
+  /** Unique user ID of the command creator */
+  creatorId: string;
   /** ISO timestamp when the command was created */
   createdAt: string;
   /** ISO timestamp when the command was last updated */
@@ -17,9 +17,15 @@ export interface CommandData {
  * Used for !command add/edit/delete/list operations.
  */
 export interface ManageParams {
-  /** The username of the person running the command */
-  username?: string;
-  /** The arguments after "!command" (e.g., "add greet Hello {{displayName}}!") */
+  /** The unique user ID of the person running the command */
+  userId?: string;
+  /** The display name of the person running the command */
+  displayName?: string;
+  /** Whether the user is a moderator */
+  isMod?: string;
+  /** Whether the user is the broadcaster */
+  isBroadcaster?: string;
+  /** The arguments after "!command" (e.g., "add greet Hello {{displayname}}!") */
   arguments?: string;
 }
 

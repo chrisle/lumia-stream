@@ -8,24 +8,26 @@ export interface ExecuteContext {
   commands: CommandStore;
   /** Function to send a chat response */
   sendResponse: (message: string) => Promise<void>;
+  /** Function to log debug messages */
+  log: (message: string) => void;
 }
 
 /**
  * Handles the execution of a custom command.
  * Looks up the command and sends its response template.
- * Lumia Stream handles variable replacement ({{message}}, {{displayName}}).
+ * Lumia Stream handles variable replacement ({{message}}, {{displayname}}).
  *
  * @param params - The action parameters with command name and arguments
  * @param ctx - The context with commands store and helper functions
  *
  * @example
  * // User types: !greet @triodeofficial
- * // Command "greet" has response: "@{{displayName}} says hello to {{message}}"
+ * // Command "greet" has response: "@{{displayname}} says hello to {{message}}"
  * await handleExecuteCommand(
  *   { command: "greet", arguments: "@triodeofficial" },
  *   ctx
  * );
- * // Sends: "@{{displayName}} says hello to {{message}}"
+ * // Sends: "@{{displayname}} says hello to {{message}}"
  * // Lumia replaces to: "@lexie says hello to @triodeofficial"
  */
 export async function handleExecuteCommand(
@@ -35,9 +37,7 @@ export async function handleExecuteCommand(
   const commandName = (params?.command || "").toLowerCase();
   const command = ctx.commands[commandName];
 
-  if (!command) {
-    return;
+  if (command) {
+    await ctx.sendResponse(command.response);
   }
-
-  await ctx.sendResponse(command.response);
 }
